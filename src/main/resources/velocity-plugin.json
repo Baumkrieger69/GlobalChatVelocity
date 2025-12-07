@@ -1,0 +1,7 @@
+{
+  "name": "GlobalChat",
+  "version": "1.0-SNAPSHOT",
+  "description": "Global chat system for Velocity proxy with server blacklisting support",
+  "authors": ["Baumkrieger69"],
+  "main": "com.abyssbay.net.globalChat.GlobalChatPlugin"
+}

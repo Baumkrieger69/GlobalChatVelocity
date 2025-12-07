@@ -6,18 +6,17 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-public class PrivateMessageCommand implements SimpleCommand {
+public class ReplyCommand implements SimpleCommand {
     private final ProxyServer proxyServer;
     private final ConfigManager configManager;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
-    
-    // Store last message sender for /reply command
-    private static final Map<String, String> lastMessager = new HashMap<>();
 
-    public PrivateMessageCommand(ProxyServer proxyServer, ConfigManager configManager) {
+    public ReplyCommand(ProxyServer proxyServer, ConfigManager configManager) {
         this.proxyServer = proxyServer;
         this.configManager = configManager;
     }
@@ -34,17 +33,26 @@ public class PrivateMessageCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         // Check arguments
-        if (args.length < 2) {
-            String msg = configManager.getMessage("usage-msg");
+        if (args.length < 1) {
+            String msg = configManager.getMessage("usage-reply");
             sender.sendMessage(miniMessage.deserialize(msg != null && !msg.isEmpty() ? msg : 
-                "§cVerwendung: /msg <Spieler> <Nachricht>"));
+                "§cVerwendung: /reply <Nachricht>"));
             return;
         }
 
-        String targetName = args[0];
-        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String message = String.join(" ", args);
 
-        // Find target player (search across all servers)
+        // Get last messager
+        String targetName = PrivateMessageCommand.getLastMessager(sender.getUsername());
+        
+        if (targetName == null) {
+            String msg = configManager.getMessage("no-reply-target");
+            sender.sendMessage(miniMessage.deserialize(msg != null && !msg.isEmpty() ? msg : 
+                "§cDu hast niemanden, dem du antworten kannst!"));
+            return;
+        }
+
+        // Find target player
         Optional<Player> targetOptional = proxyServer.getAllPlayers()
             .stream()
             .filter(p -> p.getUsername().equalsIgnoreCase(targetName))
@@ -93,8 +101,8 @@ public class PrivateMessageCommand implements SimpleCommand {
             .replace("<message>", message);
         sender.sendMessage(miniMessage.deserialize(senderMsg));
 
-        // Store for /reply
-        lastMessager.put(target.getUsername(), sender.getUsername());
+        // Update last messager
+        PrivateMessageCommand.setLastMessager(target.getUsername(), sender.getUsername());
     }
 
     @Override
@@ -105,25 +113,7 @@ public class PrivateMessageCommand implements SimpleCommand {
 
     @Override
     public List<String> suggest(Invocation invocation) {
-        String[] args = invocation.arguments();
-        
-        // Tab completion for all player names (including from blacklisted servers)
-        if (args.length == 1) {
-            return proxyServer.getAllPlayers()
-                .stream()
-                .map(Player::getUsername)
-                .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
-                .collect(Collectors.toList());
-        }
-        
+        // No arguments needed for /reply
         return Collections.emptyList();
-    }
-    
-    public static String getLastMessager(String playerName) {
-        return lastMessager.get(playerName);
-    }
-    
-    public static void setLastMessager(String playerName, String senderName) {
-        lastMessager.put(playerName, senderName);
     }
 }
