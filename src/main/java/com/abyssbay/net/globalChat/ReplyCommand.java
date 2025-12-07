@@ -109,6 +109,9 @@ public class ReplyCommand implements SimpleCommand {
 
         // Update last messager
         PrivateMessageCommand.setLastMessager(target.getUsername(), sender.getUsername());
+        
+        // Send to Discord webhook
+        DiscordWebhookHandler.sendPrivateMessage(sender.getUsername(), target.getUsername(), message, senderServerName, configManager);
     }
 
     @Override

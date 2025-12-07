@@ -46,6 +46,18 @@ public class PrivateMessageCommand implements SimpleCommand {
         String targetName = args[0];
         String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
+        // Check if sender is on a blacklisted server
+        String senderServerName = sender.getCurrentServer()
+            .map(server -> server.getServerInfo().getName())
+            .orElse("");
+        
+        if (configManager.isBlacklisted(senderServerName)) {
+            String msg = configManager.getMessage("blacklist-error-sender");
+            String errorMsg = msg != null && !msg.isEmpty() ? msg : "§cDu kannst von diesem Server aus keine Nachrichten senden!";
+            sender.sendMessage(miniMessage.deserialize(errorMsg));
+            return;
+        }
+
         // Find target player (search across all servers)
         Optional<Player> targetOptional = proxyServer.getAllPlayers()
             .stream()
@@ -94,10 +106,7 @@ public class PrivateMessageCommand implements SimpleCommand {
             sender.sendMessage(miniMessage.deserialize(awayMsg));
         }
 
-        // Get sender's current server name
-        String senderServerName = sender.getCurrentServer()
-            .map(server -> server.getServerInfo().getName())
-            .orElse("");
+        // Get sender's current server name (already retrieved above)
 
         // Send message to target
         String formatReceiver = configManager.getPrivateMsgFormatReceiver();
@@ -118,8 +127,8 @@ public class PrivateMessageCommand implements SimpleCommand {
         lastMessager.put(target.getUsername(), sender.getUsername());
         lastSent.put(sender.getUsername(), target.getUsername());
 
-        // Add to message history
-        MessageHistory.addMessage(sender.getUniqueId(), target.getUniqueId(), message, senderServerName);
+        // Send to Discord webhook
+        DiscordWebhookHandler.sendPrivateMessage(sender.getUsername(), target.getUsername(), message, senderServerName, configManager);
 
         // Broadcast to SocialSpy
         SocialSpyCommand.broadcastPrivateMessage(

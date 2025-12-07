@@ -21,6 +21,11 @@ public class ConfigManager {
     private String fallbackPrefix;
     private String fallbackSuffix;
     private Map<String, String> messages;
+    
+    // Discord Webhook values
+    private String discordWebhookUrl;
+    private String discordBotName;
+    private String discordBotAvatar;
 
     public ConfigManager(Path configPath) {
         this.configPath = configPath;
@@ -83,6 +88,9 @@ public class ConfigManager {
                     case "messages":
                         messages.put(key, value);
                         break;
+                    case "discord":
+                        parseDiscord(key, value);
+                        break;
                     case "blacklist":
                         if (key.equals("servers") && value.startsWith("[")) {
                             parseBlacklist(value);
@@ -132,6 +140,21 @@ public class ConfigManager {
                 break;
             case "default-reason":
                 awayDefaultReason = cleanValue;
+                break;
+        }
+    }
+
+    private void parseDiscord(String key, String value) {
+        String cleanValue = value.replaceAll("^['\"]|['\"]$", "");
+        switch (key) {
+            case "webhook-url":
+                discordWebhookUrl = cleanValue;
+                break;
+            case "bot-name":
+                discordBotName = cleanValue;
+                break;
+            case "bot-avatar":
+                discordBotAvatar = cleanValue;
                 break;
         }
     }
@@ -235,6 +258,14 @@ public class ConfigManager {
               socialspy-enabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <green>aktiviert<#808080>!
               socialspy-disabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <red>deaktiviert<#808080>!
 
+            # ===== DISCORD WEBHOOK KONFIGURATION =====
+            # Sende alle Private Messages zu einem Discord Webhook
+            # Setze auf "none" um zu deaktivieren
+            discord:
+              webhook-url: "none"
+              bot-name: "GlobalChat"
+              bot-avatar: "https://cdn.discordapp.com/embed/avatars/0.png"
+
             # ===== BLACKLIST KONFIGURATION =====
             # Server auf dieser Liste können nicht am Global-Chat oder Private Messages teilnehmen
             blacklist:
@@ -298,6 +329,19 @@ public class ConfigManager {
 
     public String getAwayDefaultReason() {
         return awayDefaultReason != null ? awayDefaultReason : "AFK";
+    }
+    
+    // Discord Webhook Getters
+    public String getDiscordWebhookUrl() {
+        return discordWebhookUrl != null ? discordWebhookUrl : "";
+    }
+    
+    public String getDiscordBotName() {
+        return discordBotName != null ? discordBotName : "GlobalChat";
+    }
+    
+    public String getDiscordBotAvatar() {
+        return discordBotAvatar != null ? discordBotAvatar : "";
     }
 }
 
