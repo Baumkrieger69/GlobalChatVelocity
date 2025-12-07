@@ -15,6 +15,8 @@ public class ConfigManager {
     private String privateMsgFormatSender;
     private String privateMsgFormatReceiver;
     private String socialspyFormat;
+    private String awayFormat;
+    private String awayDefaultReason;
     private boolean useLuckperms;
     private String fallbackPrefix;
     private String fallbackSuffix;
@@ -72,6 +74,9 @@ public class ConfigManager {
                     case "private-message":
                         parsePrivateMessage(key, value);
                         break;
+                    case "away":
+                        parseAway(key, value);
+                        break;
                     case "prefixes":
                         parsePrefixes(key, value);
                         break;
@@ -119,6 +124,18 @@ public class ConfigManager {
         }
     }
 
+    private void parseAway(String key, String value) {
+        String cleanValue = value.replaceAll("^['\"]|['\"]$", "");
+        switch (key) {
+            case "format":
+                awayFormat = cleanValue;
+                break;
+            case "default-reason":
+                awayDefaultReason = cleanValue;
+                break;
+        }
+    }
+
     private void parsePrefixes(String key, String value) {
         String cleanValue = value.replaceAll("^['\"]|['\"]$", "");
         switch (key) {
@@ -147,30 +164,79 @@ public class ConfigManager {
 
     private void createDefaultConfig() {
         String defaultConfig = """
+            # ===== GLOBALE CHAT KONFIGURATION =====
+            # Platzhalter:
+            #   <player> - Der Name des Spielers der schreibt
+            #   <message> - Der Nachrichteninhalt
+            #   <server> - Der Server des Spielers
             global-chat:
               enabled: true
-              format: '<#87CEFA><player><#D3D3D3> » <#FFFFFF><message>'
+              format: <#87CEFA><player><#D3D3D3> » <#FFFFFF><message>
 
+            # ===== PRIVATE NACHRICHTEN KONFIGURATION =====
+            # Platzhalter:
+            #   <sender> - Der Name des Absenders
+            #   <recipient> - Der Name des Empfängers
+            #   <message> - Der Nachrichteninhalt
+            #   <server> - Der Server des Absenders
             private-message:
-              format-sender: '<#D3D3D3>[<#C7FFD8>Du <#D3D3D3>-> <#87CEFA><recipient><#D3D3D3>] <#F8F8FF><message>'
-              format-receiver: '<#D3D3D3>[<#87CEFA><sender> <#D3D3D3>-> <#C7FFD8>Du<#D3D3D3>] <#F8F8FF><server> <message>'
-              socialspy-format: '<#555555>[<#C7FFD8>SS<#555555>] <#AAAAAA><sender> <#555555>-> <#AAAAAA><recipient><#555555>: <#FFFFFF><message>'
+              format-sender: <#D3D3D3>[<#C7FFD8>Du <#D3D3D3>-> <#87CEFA><recipient><#D3D3D3>] <#F8F8FF><message>
+              format-receiver: <#D3D3D3>[<#87CEFA><sender> <#D3D3D3>-> <#C7FFD8>Du<#D3D3D3>] [<server>] <#F8F8FF><message>
+              socialspy-format: <#555555>[<#C7FFD8>SS<#555555>] <#AAAAAA><sender> <#555555>-> <#AAAAAA><recipient><#555555>: <#FFFFFF><message>
 
+            # ===== AWAY STATUS KONFIGURATION =====
+            # Platzhalter:
+            #   <player> - Der Name des Spielers
+            #   <reason> - Der Grund warum der Spieler weg ist
+            away:
+              format: <#FFD700><player> ist gerade nicht verfügbar: <reason>
+              default-reason: AFK
+
+            # ===== PRÄFIXE UND SUFFIXE =====
             prefixes:
               use-luckperms: true
               fallback-prefix: <#808080>
-              fallback-suffix: ''
+              fallback-suffix: 
 
+            # ===== ALLE NACHRICHTEN =====
+            # Jede Nachricht kann verschiedene Platzhalter verwenden:
+            #   <player> - Spielername
+            #   <reason> - Grund/Begründung
+            #   <sender> - Absender
+            #   <recipient> - Empfänger
+            #   <message> - Nachrichteninhalt
+            #   <server> - Server-Name
             messages:
-              no-permission: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Du hast keine Berechtigung dafür!'
-              usage-msg: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /msg <Spieler> <Nachricht>'
-              usage-reply: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /reply <Nachricht>'
-              no-reply-target: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Du hast niemanden, dem du antworten kannst!'
-              player-not-online: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> ist nicht online!'
-              player-blacklisted: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> befindet sich auf einem deaktivierten Server!'
-              socialspy-enabled: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <green>aktiviert<#808080>!'
-              socialspy-disabled: '<gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <red>deaktiviert<#808080>!'
+              # Allgemeine Fehlermeldungen
+              no-permission: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Du hast keine Berechtigung dafür!
+              
+              # Verwendungshinweise
+              usage-msg: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /msg <Spieler> <Nachricht>
+              usage-reply: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /reply <Nachricht>
+              usage-away: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /away <Grund> oder /away off
+              usage-ignore: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Verwendung: /ignore <Spieler>
+              
+              # Private Nachrichten (Platzhalter: <player>)
+              no-reply-target: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Du hast niemanden, dem du antworten kannst!
+              player-not-online: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> ist nicht online!
+              player-blacklisted: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> befindet sich auf einem deaktivierten Server!
+              player-ignored: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> hat dich ignoriert!
+              
+              # Away Status (Platzhalter: <player>, <reason>)
+              away-enabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Du bist jetzt weg: <reason>
+              away-disabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Willkommen zurück!
+              player-away: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>Der Spieler <player> ist gerade nicht verfügbar: <reason>
+              
+              # Ignore System (Platzhalter: <player>)
+              ignore-added: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700><player> wurde ignoriert!
+              ignore-removed: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700><player> wurde nicht mehr ignoriert!
+              
+              # SocialSpy (Platzhalter: <sender>, <recipient>, <message>)
+              socialspy-enabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <green>aktiviert<#808080>!
+              socialspy-disabled: <gradient:#4A9FD8:#FFFFE0><bold>Abyssbay</bold></gradient> <#808080>| <#FFD700>SocialSpy wurde <red>deaktiviert<#808080>!
 
+            # ===== BLACKLIST KONFIGURATION =====
+            # Server auf dieser Liste können nicht am Global-Chat oder Private Messages teilnehmen
             blacklist:
               servers: []
             """;
@@ -223,6 +289,15 @@ public class ConfigManager {
         serverTags.clear();
         messages.clear();
         loadConfig();
+    }
+
+    // Away Getters
+    public String getAwayFormat() {
+        return awayFormat != null ? awayFormat : "<#FFD700><player> ist gerade nicht verfügbar: <reason>";
+    }
+
+    public String getAwayDefaultReason() {
+        return awayDefaultReason != null ? awayDefaultReason : "AFK";
     }
 }
 

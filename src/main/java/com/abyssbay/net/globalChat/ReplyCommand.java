@@ -42,8 +42,13 @@ public class ReplyCommand implements SimpleCommand {
 
         String message = String.join(" ", args);
 
-        // Get last messager
+        // Get last messager (who sent us a message)
         String targetName = PrivateMessageCommand.getLastMessager(sender.getUsername());
+        
+        // Fallback: if no one sent us a message, try who we sent to
+        if (targetName == null) {
+            targetName = PrivateMessageCommand.getLastSent(sender.getUsername());
+        }
         
         if (targetName == null) {
             String msg = configManager.getMessage("no-reply-target");
@@ -53,9 +58,10 @@ public class ReplyCommand implements SimpleCommand {
         }
 
         // Find target player
+        final String finalTargetName = targetName;
         Optional<Player> targetOptional = proxyServer.getAllPlayers()
             .stream()
-            .filter(p -> p.getUsername().equalsIgnoreCase(targetName))
+            .filter(p -> p.getUsername().equalsIgnoreCase(finalTargetName))
             .findFirst();
 
         if (targetOptional.isEmpty()) {

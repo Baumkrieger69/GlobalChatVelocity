@@ -16,6 +16,8 @@ public class PrivateMessageCommand implements SimpleCommand {
     
     // Store last message sender for /reply command
     private static final Map<String, String> lastMessager = new HashMap<>();
+    // Store who we last sent a message to (for /reply fallback)
+    private static final Map<String, String> lastSent = new HashMap<>();
 
     public PrivateMessageCommand(ProxyServer proxyServer, ConfigManager configManager) {
         this.proxyServer = proxyServer;
@@ -73,6 +75,25 @@ public class PrivateMessageCommand implements SimpleCommand {
             return;
         }
 
+        // Check if target is ignoring the sender
+        if (IgnoreCommand.isIgnoring(target.getUniqueId(), sender.getUniqueId())) {
+            String msg = configManager.getMessage("player-ignored");
+            String errorMsg = msg != null && !msg.isEmpty() ? msg : "§cDer Spieler <player> hat dich ignoriert!";
+            errorMsg = errorMsg.replace("<player>", targetName);
+            sender.sendMessage(miniMessage.deserialize(errorMsg));
+            return;
+        }
+
+        // Check if target is away
+        if (AwayCommand.isAway(target.getUniqueId())) {
+            String awayReason = AwayCommand.getAwayReason(target.getUniqueId());
+            String msg = configManager.getMessage("player-away");
+            String awayMsg = msg != null && !msg.isEmpty() ? msg : "§cDer Spieler <player> ist gerade nicht verfügbar: <reason>";
+            awayMsg = awayMsg.replace("<player>", target.getUsername())
+                    .replace("<reason>", awayReason);
+            sender.sendMessage(miniMessage.deserialize(awayMsg));
+        }
+
         // Get sender's current server name
         String senderServerName = sender.getCurrentServer()
             .map(server -> server.getServerInfo().getName())
@@ -95,6 +116,19 @@ public class PrivateMessageCommand implements SimpleCommand {
 
         // Store for /reply
         lastMessager.put(target.getUsername(), sender.getUsername());
+        lastSent.put(sender.getUsername(), target.getUsername());
+
+        // Add to message history
+        MessageHistory.addMessage(sender.getUniqueId(), target.getUniqueId(), message, senderServerName);
+
+        // Broadcast to SocialSpy
+        SocialSpyCommand.broadcastPrivateMessage(
+            sender.getUsername(), 
+            target.getUsername(), 
+            message, 
+            senderServerName, 
+            configManager
+        );
     }
 
     @Override
@@ -125,5 +159,13 @@ public class PrivateMessageCommand implements SimpleCommand {
     
     public static void setLastMessager(String playerName, String senderName) {
         lastMessager.put(playerName, senderName);
+    }
+    
+    public static String getLastSent(String playerName) {
+        return lastSent.get(playerName);
+    }
+    
+    public static void setLastSent(String playerName, String targetName) {
+        lastSent.put(playerName, targetName);
     }
 }

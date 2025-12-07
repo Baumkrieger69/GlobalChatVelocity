@@ -36,6 +36,9 @@ public class GlobalChatPlugin {
         Path configPath = Paths.get("plugins", "globalchat", "config.yml");
         configManager = new ConfigManager(configPath);
 
+        // Initialize PermissionProvider
+        new PermissionProvider(this);
+
         // Register chat listeners
         proxyServer.getEventManager().register(this, new ChatListener(proxyServer, configManager));
         proxyServer.getEventManager().register(this, new MinecraftChatCommandHandler(proxyServer, configManager));
@@ -60,13 +63,39 @@ public class GlobalChatPlugin {
             .build();
         commandManager.register(reloadMeta, new ReloadCommand(configManager));
 
+        // /away command
+        CommandMeta awayMeta = commandManager.metaBuilder("away")
+            .aliases("brb")
+            .build();
+        commandManager.register(awayMeta, new AwayCommand(this, configManager));
+
+        // /ignore command
+        CommandMeta ignoreMeta = commandManager.metaBuilder("ignore")
+            .aliases("unignore", "ignorelist")
+            .build();
+        commandManager.register(ignoreMeta, new IgnoreCommand(this, configManager, proxyServer));
+
+        // /socialspy command
+        CommandMeta socialspyMeta = commandManager.metaBuilder("socialspy")
+            .aliases("ss")
+            .build();
+        commandManager.register(socialspyMeta, new SocialSpyCommand(this, configManager));
+
         logger.info("GlobalChat plugin enabled!");
         logger.info("Global Chat: " + (configManager.isGlobalChatEnabled() ? "enabled" : "disabled"));
         logger.info("Blacklisted servers: " + configManager.getBlacklistedServers());
-        logger.info("Commands registered: /msg, /reply, /gcreload");
+        logger.info("Commands registered: /msg, /reply, /gcreload, /away, /ignore, /socialspy");
     }
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public ProxyServer getProxyServer() {
+        return proxyServer;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 }
